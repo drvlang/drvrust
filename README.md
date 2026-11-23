@@ -1,6 +1,6 @@
 # drvrust
 
-Build and test Rust programs directly from a version 4 `Cargo.lock`. A dynamic Nix derivation plans the per-crate downloads from the checksums already in Cargo's lockfile. Cargo builds and tests the selected package offline. Workspace members and crates.io packages are supported.
+Build and test Rust programs directly from a version 4 `Cargo.lock`. A dynamic Nix derivation plans the per-crate downloads from the checksums already in Cargo's lockfile. Cargo builds and tests the selected package offline. Unpacked crates, the vendor directory, and the built package are content-addressed, so identical outputs keep the same store path after a rebuild. Workspace members and crates.io packages are supported.
 
 ```sh
 nix run github:drvlang/drvrust -- build -C ./app

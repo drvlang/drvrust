@@ -15,10 +15,27 @@ let
   };
   workspace = self.lib.mkMonorepoFlake { inherit commands srcForTarget; };
   apps = workspace.apps.${system};
+  api = workspace.packages.${system}.api;
+  editedApi = edit: self.lib.mkPackage {
+    inherit system commands;
+    target = "api";
+    src = pkgs.runCommand "project-source" { __contentAddressed = true; } ''
+      cp -r ${srcForTarget { target = commands.api; }} "$out"
+      chmod -R u+w "$out"
+      cd "$out"
+      ${edit}
+    '';
+  };
+  manifestEdit = editedApi ''echo "# edited manifest" >> apps/api/Cargo.toml'';
+  programEdit = editedApi ''sed -i 's/api {}/edited {}/' apps/api/src/main.rs'';
 in pkgs.runCommand "check-workspace" {
+  __contentAddressed = true;
   memberTests = builtins.attrValues workspace.checks.${system};
 } ''
   test "$(${apps.api.program})" = 'api drvlang'
   test "$(${apps.worker.program})" = 'worker drvlang'
+  test "${api}" = "${manifestEdit}"
+  test "${api}" != "${programEdit}"
+  test "$(${programEdit}/bin/api)" = 'edited drvlang'
   touch "$out"
 ''
