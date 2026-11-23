@@ -1,0 +1,44 @@
+{
+  "nodes": {
+    "drvkit": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795403947,
+        "narHash": "sha256-GSe8PPAlYyb3zS499Id7LygnG8r8UQ9sXj0HGCKdB6w=",
+        "owner": "drvlang",
+        "repo": "drvkit",
+        "rev": "3adc7caa6d53a31b1a16a2daef71fba0119b1cb4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "drvlang",
+        "repo": "drvkit",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1786593342,
+        "narHash": "sha256-smTKQXMLLStzc8zJevMCckbk3My7SvbbLmPYZUJJKW4=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "6b5e5b7a6631f065bf6908986990b37d845f847f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "6b5e5b7a6631f065bf6908986990b37d845f847f",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "drvkit": "drvkit",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
