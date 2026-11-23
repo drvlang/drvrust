@@ -8,6 +8,8 @@ nix run github:drvlang/drvrust -- test -C ./app
 nix run github:drvlang/drvrust -- run -C ./app -- --help
 ```
 
+The release build runs the full Cargo test suite. Building the package and its default check together compiles and tests it once. To run a filtered suite, use `drvrust test -- test_name`.
+
 Enable `ca-derivations`, `dynamic-derivations` and `recursive-nix` in Nix and the build daemon. The builder needs the `recursive-nix` system feature. For a package that installs multiple binaries, choose one with `--options '{"program":"my-tool"}'`. Nix callers can supply native dependencies through `buildInputs` and `nativeBuildInputs`. The flake supports x86-64 and AArch64 Linux.
 
 ## Flakes and workspaces

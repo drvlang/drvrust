@@ -28,7 +28,9 @@ let
   };
   manifestEdit = editedApi ''echo "# edited manifest" >> apps/api/Cargo.toml'';
   programEdit = editedApi ''sed -i 's/api {}/edited {}/' apps/api/src/main.rs'';
-in pkgs.runCommand "check-workspace" {
+in
+assert api.planner.drvPath == workspace.checks.${system}.api.planner.drvPath;
+pkgs.runCommand "check-workspace" {
   __contentAddressed = true;
   memberTests = builtins.attrValues workspace.checks.${system};
 } ''

@@ -7,18 +7,26 @@ let
   # development output as stdenv would, including for split-output libraries.
   inputs = deps: lib.concatMapStringsSep " "
     (dep: "(builtins.storePath ${lib.strings.escapeNixString (toString (lib.getDev dep))})") deps;
-in dynamic {
-  name = if test then "drvrust-test" else "drvrust-package";
-  expression = ''
-    let pkgs = import ${pkgs.path} { system = "${pkgs.stdenv.hostPlatform.system}"; };
-    in import ${./build.nix} pkgs {
-      src = builtins.storePath "${src}";
-      memberPath = ${lib.strings.escapeNixString memberPath};
-      package = ${if package == null then "null" else lib.strings.escapeNixString package};
-      test = ${lib.boolToString test};
-      testArgs = builtins.fromJSON ${lib.strings.escapeNixString (builtins.toJSON testArgs)};
-      nativeBuildInputs = [ ${inputs nativeBuildInputs} ];
-      buildInputs = [ ${inputs buildInputs} ];
-    }
-  '';
-}
+  filteredTest = test && testArgs != [];
+  built = dynamic {
+    name = if filteredTest then "drvrust-test" else "drvrust-package";
+    expression = ''
+      let pkgs = import ${pkgs.path} { system = "${pkgs.stdenv.hostPlatform.system}"; };
+      in import ${./build.nix} pkgs {
+        src = builtins.storePath "${src}";
+        memberPath = ${lib.strings.escapeNixString memberPath};
+        package = ${if package == null then "null" else lib.strings.escapeNixString package};
+        test = ${lib.boolToString filteredTest};
+        testArgs = builtins.fromJSON ${lib.strings.escapeNixString (builtins.toJSON testArgs)};
+        nativeBuildInputs = [ ${inputs nativeBuildInputs} ];
+        buildInputs = [ ${inputs buildInputs} ];
+      }
+    '';
+  };
+# buildRustPackage runs the full suite before installation. An unfiltered
+# check can share that exact build, including its recursive planner.
+in if test && !filteredTest then pkgs.runCommand "drvrust-test" {
+  __contentAddressed = true;
+  checkedPackage = built;
+  passthru = { inherit (built) planner; };
+} ''mkdir "$out"'' else built
