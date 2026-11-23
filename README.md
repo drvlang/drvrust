@@ -12,16 +12,28 @@ Enable `ca-derivations`, `dynamic-derivations` and `recursive-nix` in Nix and th
 
 ## Flakes and workspaces
 
-Use `drvrust.lib.mkFlake { src = ./.; }` for one project. For a Cargo workspace, give each command the directory containing its member manifest. Cargo uses the root lockfile and can resolve shared local crates.
+For one crate, use `drvrust.lib.mkFlake` with a source selection covering its Cargo manifests, source code, tests and build-script inputs. For a Cargo workspace, give each command the directory containing its member manifest. Cargo uses the root lockfile and can resolve shared local crates.
 
 ```nix
 outputs = { drvrust, ... }: drvrust.lib.mkMonorepoFlake {
-  src = ./.;
+  srcForTarget = { target, ... }: let member = ./. + "/${target}";
+  in drvrust.lib.projectSource {
+    root = ./.;
+    files = [
+      ./Cargo.toml ./Cargo.lock
+      ./pkg/shared/Cargo.toml ./pkg/shared/src
+      (member + "/Cargo.toml") (member + "/src")
+    ];
+  };
   commands = { api = "apps/api"; worker = "apps/worker"; };
 };
 ```
 
-Use `nix build .#api`, `nix run .#worker` and `nix flake check`. For the same names on the CLI, put `{"commands":{"api":"apps/api","worker":"apps/worker"}}` in `drvlang.json` and run `drvrust test api`. The `package` option also accepts a Cargo package name. [Working workspace](tests/workspace)
+The example uses Cargo workspace member globs. If the root explicitly names sibling members, include the manifest and target paths Cargo requires from those members. Keep any build scripts, data files or shared crates that the chosen member reads.
+
+Use `nix build .#api`, `nix run .#worker` and `nix flake check`. For CLI target names, put `{"commands":{"api":"apps/api","worker":"apps/worker"}}` in `drvlang.json` and run `drvrust test api`. The `package` option also accepts a Cargo package name. [Working workspace](tests/workspace)
+
+Read that same map in the flake with `commands = (builtins.fromJSON (builtins.readFile ./drvlang.json)).commands;`.
 
 ## Benchmark
 
