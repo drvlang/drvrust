@@ -1,20 +1,18 @@
-{ drvkit, test ? false }:
+{ drvkit, nixpkgs ? null, test ? false }:
 pkgs: { src, memberPath ? ".", testArgs ? [], package ? null, nativeBuildInputs ? [], buildInputs ? [] }:
 let
   inherit (pkgs) lib;
+  nixpkgsSource = import (drvkit + "/nixpkgs-source.nix") pkgs nixpkgs;
   dynamic = import (drvkit + "/dynamic.nix") { inherit pkgs; };
   # Reattach dependency context inside the recursive evaluator. Select the
   # development output as stdenv would, including for split-output libraries.
   inputs = deps: lib.concatMapStringsSep " "
     (dep: "(builtins.storePath ${lib.strings.escapeNixString (toString (lib.getDev dep))})") deps;
-  # Interpolating the path value pkgs.path copies nixpkgs into the store on every evaluation.
-  path = toString pkgs.path;
-  nixpkgs = if lib.isStorePath pkgs.path then builtins.appendContext path { ${path}.path = true; } else pkgs.path;
   filteredTest = test && testArgs != [];
   built = dynamic {
     name = if filteredTest then "drvrust-test" else "drvrust-package";
     expression = ''
-      let pkgs = import ${nixpkgs} { system = "${pkgs.stdenv.hostPlatform.system}"; };
+      let pkgs = import ${nixpkgsSource} { system = "${pkgs.stdenv.hostPlatform.system}"; };
       in import ${./build.nix} pkgs {
         src = builtins.storePath "${src}";
         memberPath = ${lib.strings.escapeNixString memberPath};
