@@ -7,13 +7,16 @@
     inherit self nixpkgs;
     toolSource = {
       root = ./.;
-      files = [ ./build.nix ./package.nix ];
+      files = [ ./package.nix ./nix/toolchain.nix ./src ];
       benchmarkFiles = [ ./benchmarks/default.nix ./benchmarks/source.nix ];
     };
     name = "drvrust";
-    extraChecks = system: let args = {
-      pkgs = nixpkgs.legacyPackages.${system}; inherit self system;
-    }; in {
+    extraChecks = system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      args = { inherit pkgs self system; };
+      tc = import ./nix/toolchain.nix { inherit pkgs; };
+    in {
+      worker-tests = tc.workerTests;
       benchmark = import ./benchmarks args;
       workspace = import ./tests args;
     };
